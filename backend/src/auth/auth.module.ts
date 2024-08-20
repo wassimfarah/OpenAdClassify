@@ -9,13 +9,15 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
   imports: [
-    ConfigModule, // Import ConfigModule
+    ConfigModule.forRoot(), // Ensure environment variables are loaded
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'defaultSecretKey',
-        signOptions: { expiresIn: '1h' },
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: configService.get<string>('ACCESS_TOKEN_EXPIRY')
+        },
       }),
     }),
     UsersModule,
