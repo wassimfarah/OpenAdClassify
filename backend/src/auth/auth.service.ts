@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config'; // Import ConfigService
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
@@ -10,7 +10,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-    private configService: ConfigService, // Inject ConfigService
+    private configService: ConfigService,
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -19,46 +19,54 @@ export class AuthService {
     });
 
     if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
-      throw new Error('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { sub: user.id, username: user.username };
-
-    // Retrieve token expiration from environment variables
-    const accessTokenExpiry = this.configService.get<string>('ACCESS_TOKEN_EXPIRY');
-    const refreshTokenExpiry = this.configService.get<string>('REFRESH_TOKEN_EXPIRY');
+    const accessToken = this.generateAccessToken(user.id, user.username);
+    const refreshToken = this.generateRefreshToken(user.id);
 
     return {
-      access_token: this.jwtService.sign(payload, { expiresIn: accessTokenExpiry }),
-      refresh_token: this.generateRefreshToken(user.id, refreshTokenExpiry),
+      access_token: accessToken,
+      refresh_token: refreshToken,
     };
   }
 
   async refreshToken(token: string) {
     try {
-      const payload = this.jwtService.verify(token, { secret: this.configService.get<string>('JWT_REFRESH_SECRET') });
+      const payload = this.jwtService.verify(token, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
+
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
       });
 
       if (!user) {
-        throw new Error('User not found');
+        throw new UnauthorizedException('Invalid refresh token');
       }
 
-      // Retrieve token expiration from environment variables
-      const accessTokenExpiry = this.configService.get<string>('ACCESS_TOKEN_EXPIRY');
-      const refreshTokenExpiry = this.configService.get<string>('REFRESH_TOKEN_EXPIRY');
+      const accessToken = this.generateAccessToken(user.id, user.username);
+      const refreshToken = this.generateRefreshToken(user.id);
 
       return {
-        access_token: this.jwtService.sign({ sub: user.id, username: user.username }, { expiresIn: accessTokenExpiry }),
-        refresh_token: this.generateRefreshToken(user.id, refreshTokenExpiry),
+        access_token: accessToken,
+        refresh_token: refreshToken,
       };
     } catch (err) {
-      throw new Error('Invalid refresh token');
+      throw new UnauthorizedException('Invalid refresh token');
     }
   }
 
-  private generateRefreshToken(userId: number, refreshTokenExpiry: string) {
-    return this.jwtService.sign({ sub: userId }, { secret: this.configService.get<string>('JWT_REFRESH_SECRET'), expiresIn: refreshTokenExpiry });
+  private generateAccessToken(userId: number, username: string) {
+    const payload = { sub: userId, username };
+    const expiresIn = this.configService.get<string>('ACCESS_TOKEN_EXPIRY');
+    return this.jwtService.sign(payload, { expiresIn });
+  }
+
+  private generateRefreshToken(userId: number) {
+    const payload = { sub: userId };
+    const expiresIn = this.configService.get<string>('REFRESH_TOKEN_EXPIRY');
+    const secret = this.configService.get<string>('JWT_REFRESH_SECRET');
+    return this.jwtService.sign(payload, { secret, expiresIn });
   }
 }
