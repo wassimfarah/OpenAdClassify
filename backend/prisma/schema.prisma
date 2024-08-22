@@ -14,7 +14,7 @@ model User {
   phoneNumber    String   @unique
   password       String
   profilePicture String?
-  isAdmin        Boolean  @default(false)
+  role           String   @default("user") // Add this line
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
