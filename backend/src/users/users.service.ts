@@ -31,6 +31,7 @@ export class UsersService {
         email,
         password: hashedPassword,
         phoneNumber,
+        role: 'user', // Hardcode the role to 'user'
       },
     });
   }
