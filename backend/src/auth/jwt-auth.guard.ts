@@ -20,7 +20,7 @@ export class JwtAuthGuard implements CanActivate {
     console.log("Testing: Checking secret key");
 
     // Log the secret key being used by ConfigService
-    const secretKey = this.configService.get<string>('JWT_SECRET');
+    const secretKey = this.configService.get<string>('JWT_ACCESS_SECRET');
     console.log("Secret Key:", secretKey);
 
     if (!token) {
