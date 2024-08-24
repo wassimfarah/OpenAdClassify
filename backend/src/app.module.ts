@@ -7,6 +7,10 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { RedisService } from './redis/redis.service';
 import { RedisModule } from './redis/redis.module';
+import { AdModule } from './ad/ad.module';
+import { CategoryModule } from './category/category.module';
+import { SubcategoryModule } from './subcategory/subcategory.module';
+import { MediaModule } from './media/media.module';
 
 @Module({
   imports: [
@@ -17,6 +21,10 @@ import { RedisModule } from './redis/redis.module';
     UsersModule,
     AuthModule,
     RedisModule,
+    AdModule,
+    CategoryModule,
+    SubcategoryModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [AppService, RedisService],

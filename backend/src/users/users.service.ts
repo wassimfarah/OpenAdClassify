@@ -2,6 +2,7 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
+import { UserRole } from '@prisma/client'; // Import UserRole enum
 
 @Injectable()
 export class UsersService {
@@ -31,7 +32,7 @@ export class UsersService {
         email,
         password: hashedPassword,
         phoneNumber,
-        role: 'user', // Hardcode the role to 'user'
+        role: UserRole.USER, // Use the UserRole enum
       },
     });
   }
