@@ -42,7 +42,7 @@ export class CreateAdDto {
   subcategoryId: string;
 
   @IsInt()
-  createdById: number; // Added this to match your schema where `createdById` is an integer
+  createdById: number; 
 
   @IsOptional()
   @IsString({ each: true })
@@ -50,9 +50,8 @@ export class CreateAdDto {
 
   @IsOptional()
   @IsInt()
-  numberOfImpressions?: number = 0; // Default is 0, but can be overridden if provided
+  numberOfImpressions?: number = 0; 
 
-  // Timestamps are usually handled automatically by Prisma, but you can include them if needed
   @IsOptional()
   createdAt?: Date;
 

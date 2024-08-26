@@ -1,7 +1,9 @@
 import * as dotenv from 'dotenv';
+import * as moment from 'moment-timezone';
 
-// Load environment variables from .env
 dotenv.config();
+
+const utcOffsetHours = parseInt(process.env.UTC_HOURS_OFFSET, 10);
 
 export interface SuccessResponse<T> {
   statusCode: number;
@@ -17,6 +19,12 @@ export interface ErrorResponse {
   timestamp: string;
 }
 
+// Function to get the current date-time and apply the offset
+function getCurrentDateTimeWithOffset(): string {
+  const now = moment().utcOffset(utcOffsetHours).format('YYYY-MM-DDTHH:mm:ssZ');
+  return now;
+}
+
 export const createSuccessResponse = <T>(
   data: T,
   message = 'Success',
@@ -26,7 +34,7 @@ export const createSuccessResponse = <T>(
     statusCode,
     message,
     data,
-    timestamp: getFormattedTimestamp(),
+    timestamp: getCurrentDateTimeWithOffset(), // Apply offset to the timestamp
   };
 };
 
@@ -39,23 +47,6 @@ export const createErrorResponse = (
     statusCode,
     message,
     error,
-    timestamp: getFormattedTimestamp(),
+    timestamp: getCurrentDateTimeWithOffset(), // Apply offset to the timestamp
   };
 };
-
-function getFormattedTimestamp(): string {
-  const timezone = process.env.DATABASE_TIMEZONE || 'Africa/Tunis'; // Get timezone from .env or fallback
-
-  const options: Intl.DateTimeFormatOptions = {
-    timeZone: timezone,
-    hour12: false,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  };
-
-  return new Date().toLocaleString('en-GB', options).replace(',', '');
-}

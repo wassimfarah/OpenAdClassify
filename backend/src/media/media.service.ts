@@ -1,11 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateMediaDto } from './dto/create-media.dto';
 import { UpdateMediaDto } from './dto/update-media.dto';
+import { convertUtcToOffset } from 'src/utils/common/time.util';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 @Injectable()
 export class MediaService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly utcOffsetHours: number;
+
+  constructor(private readonly prisma: PrismaService) {
+    this.utcOffsetHours = parseInt(process.env.UTC_HOURS_OFFSET, 10);
+  }
 
   async create(createMediaDto: CreateMediaDto) {
     const { url, type } = createMediaDto;
@@ -25,13 +33,28 @@ export class MediaService {
   }
 
   async findAll() {
-    return this.prisma.media.findMany();
+    const mediaList = await this.prisma.media.findMany();
+    return mediaList.map(media => ({
+      ...media,
+      createdAt: convertUtcToOffset(media.createdAt, this.utcOffsetHours),
+      updatedAt: convertUtcToOffset(media.updatedAt, this.utcOffsetHours),
+    }));
   }
 
   async findOne(id: string) {
-    return this.prisma.media.findUnique({
+    const media = await this.prisma.media.findUnique({
       where: { id },
     });
+
+    if (!media) {
+      throw new NotFoundException('Media not found');
+    }
+
+    return {
+      ...media,
+      createdAt: convertUtcToOffset(media.createdAt, this.utcOffsetHours),
+      updatedAt: convertUtcToOffset(media.updatedAt, this.utcOffsetHours),
+    };
   }
 
   async remove(id: string) {

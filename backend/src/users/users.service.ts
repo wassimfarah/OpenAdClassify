@@ -3,10 +3,16 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { UserRole } from '@prisma/client'; // Import UserRole enum
+import { convertUtcToOffset } from 'src/utils/common/time.util';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  private readonly utcOffsetHours: number;
+
+  constructor(private prisma: PrismaService) {
+    this.utcOffsetHours = parseInt(process.env.UTC_HOURS_OFFSET, 10);
+  }
+
 
   async register(createUserDto: CreateUserDto) {
     const { username, email, password, phoneNumber } = createUserDto;
@@ -43,10 +49,13 @@ export class UsersService {
       where: { id: userId },
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found.');
-    }
+    // Convert timestamps to the desired timezone
+    const userWithConvertedTimes = {
+      ...user,
+      createdAt: convertUtcToOffset(user.createdAt, this.utcOffsetHours),
+      updatedAt: convertUtcToOffset(user.updatedAt, this.utcOffsetHours),
+    };
 
-    return user;
+    return userWithConvertedTimes;
   }
 }

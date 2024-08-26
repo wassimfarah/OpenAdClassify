@@ -2,14 +2,22 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
+import { convertUtcToOffset } from 'src/utils/common/time.util';
 import {
   createSuccessResponse,
   createErrorResponse,
 } from 'src/utils/common/response.util';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 @Injectable()
 export class AdService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly utcOffsetHours: number;
+
+  constructor(private readonly prisma: PrismaService) {
+    this.utcOffsetHours = parseInt(process.env.UTC_HOURS_OFFSET, 10);
+  }
 
   async create(createAdDto: CreateAdDto) {
     try {
@@ -75,7 +83,15 @@ export class AdService {
           media: true, // Include the media field when fetching all ads
         },
       });
-      return createSuccessResponse(ads, 'Ads fetched successfully');
+
+      // Convert timestamps to the desired timezone based on the UTC offset
+      const adsWithConvertedTimes = ads.map((ad) => ({
+        ...ad,
+        createdAt: convertUtcToOffset(ad.createdAt, this.utcOffsetHours),
+        updatedAt: convertUtcToOffset(ad.updatedAt, this.utcOffsetHours),
+      }));
+
+      return createSuccessResponse(adsWithConvertedTimes, 'Ads fetched successfully');
     } catch (error) {
       throw new HttpException(
         createErrorResponse('Failed to fetch ads', error.message),
@@ -92,13 +108,22 @@ export class AdService {
           media: true, // Include the media field when fetching a specific ad
         },
       });
+
       if (!ad) {
         throw new HttpException(
           createErrorResponse('Ad not found', 'The requested ad does not exist'),
           HttpStatus.NOT_FOUND,
         );
       }
-      return createSuccessResponse(ad, 'Ad fetched successfully');
+
+      // Convert timestamps to the desired timezone based on the UTC offset
+      const adWithConvertedTimes = {
+        ...ad,
+        createdAt: convertUtcToOffset(ad.createdAt, this.utcOffsetHours),
+        updatedAt: convertUtcToOffset(ad.updatedAt, this.utcOffsetHours),
+      };
+
+      return createSuccessResponse(adWithConvertedTimes, 'Ad fetched successfully');
     } catch (error) {
       throw new HttpException(
         createErrorResponse('Failed to fetch the ad', error.message),
