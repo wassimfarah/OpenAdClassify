@@ -8,11 +8,11 @@ import { Provider } from 'react-redux';
 import { store } from '../Redux/store';
 import CheckAuth from './components/CheckAuth';
 import { useState } from 'react';
+import RouteAuthGuard from './components/RouteAccessControl ';
 
 export default function Layout({ children }: { children: ReactNode }) {
   const [authChecked, setAuthChecked] = useState(false);
 
-  // Function to handle the completion of authentication check
   const handleAuthComplete = () => {
     setAuthChecked(true);
   };
@@ -24,13 +24,14 @@ export default function Layout({ children }: { children: ReactNode }) {
           <CheckAuth onAuthComplete={handleAuthComplete} />
           {authChecked ? (
             <>
+            <RouteAuthGuard>
               <CustomNavbar />
               {children}
+            </RouteAuthGuard>
             </>
-          ) : <></> 
-          
-           // <div>Loading...</div> // Show a loading message or spinner
-          }
+          ) : (
+            <div></div> // Show Spinner state while auth is checked
+          )}
         </Provider>
       </body>
     </html>
