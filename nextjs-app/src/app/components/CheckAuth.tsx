@@ -1,41 +1,47 @@
 // src/app/components/CheckAuth.tsx
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useEffect } from 'react';
 import { setLoggedIn, setUser } from '@/Redux/authSlice';
-import { apiRequest } from '@/utils/apiRequest';
+import { apiRequest } from '@/utils/axiosApiRequest';
 
-const CheckAuth = () => {
+interface CheckAuthProps {
+  onAuthComplete: () => void;
+}
+
+const CheckAuth = ({ onAuthComplete }: CheckAuthProps) => {
   const dispatch = useDispatch();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkUserAuth = async () => {
       try {
         const response = await apiRequest({
           method: 'GET',
-          url: `${process.env.NEXT_PUBLIC_BACKEND_URL_VERIFY_COOKIE}`, // Replace with your actual endpoint
-          useCredentials: true, // Ensure credentials are sent with the request
+          url: `${process.env.NEXT_PUBLIC_BACKEND_URL_VERIFY_COOKIE}`,
+          useCredentials: true,
         });
-
-        console.log('User auth response:', response);
 
         if (response.loggedIn) {
           dispatch(setLoggedIn(true));
-          dispatch(setUser(response.user)); // Dispatch user data
+          dispatch(setUser(response.user));
         } else {
           dispatch(setLoggedIn(false));
-          dispatch(setUser(undefined)); // Clear user data
+          dispatch(setUser(undefined));
         }
       } catch (error) {
         console.error('Error checking user auth:', error.message);
         dispatch(setLoggedIn(false));
-        dispatch(setUser(undefined)); // Clear user data on error
+        dispatch(setUser(undefined));
+      } finally {
+        setLoading(false);
+        onAuthComplete(); // Notify that auth check is complete
       }
     };
 
     checkUserAuth();
-  }, [dispatch]);
+  }, [dispatch, onAuthComplete]);
 
   return null;
 };

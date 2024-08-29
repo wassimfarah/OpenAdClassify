@@ -9,7 +9,7 @@ import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
 import Link from 'next/link';
 import { Dropdown } from 'react-bootstrap';
-import { apiRequest } from '../../utils/apiRequest'; // Import the apiRequest function
+import { apiRequest } from '../../utils/axiosApiRequest'; // Import the apiRequest function
 
 function NavScrollExample() {
   const { loggedIn, user } = useSelector((state: RootState) => state.auth);
