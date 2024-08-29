@@ -1,0 +1,36 @@
+/* src/app/components/styles/Navbar.module.css */
+
+.navbarContainer {
+    background-color: #f8f9fa;
+  }
+  
+  .navbarBrand {
+    font-weight: bold;
+  }
+  
+  .createAdDropdown {
+    border: none;
+    display: flex;
+    align-items: center;
+  }
+
+  .createAdButton:hover {
+    background-color: #0056b3;
+    color: white;
+  }
+  
+  .dropdownIcon {
+    margin-left: 8px;
+  }
+  
+  .dropdownDividerSpacing {
+    padding-top: 12px;
+  }
+  
+  .donateItemSpacing {
+    margin-top: 16px;
+  }
+  
+  .donateItemSpacing hr {
+    margin: 12px 0;
+  }

@@ -7,6 +7,7 @@ import { UsersModule } from '../users/users.module';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
 import { RolesGuard } from 'src/guards/roles.guard';
+import { UsersService } from 'src/users/users.service';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { RolesGuard } from 'src/guards/roles.guard';
     UsersModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, PrismaService, RedisService],
+  providers: [AuthService, PrismaService, RedisService, UsersService],
   exports: [AuthService],
 })
 export class AuthModule {}
