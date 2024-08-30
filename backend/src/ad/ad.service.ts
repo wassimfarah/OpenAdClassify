@@ -18,14 +18,12 @@ export class AdService {
   constructor(private readonly prisma: PrismaService) {
     this.utcOffsetHours = parseInt(process.env.UTC_HOURS_OFFSET, 10);
   }
-
   async create(createAdDto: CreateAdDto) {
     try {
       const {
         title,
         description,
         price,
-        desiredPrice,
         minimumPrice,
         type,
         acceptOffer,
@@ -44,7 +42,6 @@ export class AdService {
           title,
           description,
           price,
-          desiredPrice,
           minimumPrice,
           type,
           acceptOffer,
@@ -66,7 +63,6 @@ export class AdService {
           },
         },
       });
-
       return createSuccessResponse(ad, 'Ad created successfully');
     } catch (error) {
       throw new HttpException(

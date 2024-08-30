@@ -12,9 +12,6 @@ export class CreateAdDto {
   price: number;
 
   @IsNumber()
-  desiredPrice: number;
-
-  @IsNumber()
   minimumPrice: number;
 
   @IsEnum(AdType)
@@ -32,6 +29,7 @@ export class CreateAdDto {
   @IsString()
   location: string;
 
+  @IsOptional()
   @IsEnum(AdStatus)
   adStatus: AdStatus;
 
@@ -41,8 +39,9 @@ export class CreateAdDto {
   @IsString()
   subcategoryId: string;
 
+  @IsOptional() // Optional field, will be included from the extracted sub from the request
   @IsInt()
-  createdById: number; 
+  createdById?: number;
 
   @IsOptional()
   @IsString({ each: true })

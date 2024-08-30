@@ -50,7 +50,6 @@ model Ad {
   title           String
   description     String
   price           Float
-  desiredPrice    Float
   minimumPrice    Float
   type            AdType
   acceptOffer     Boolean

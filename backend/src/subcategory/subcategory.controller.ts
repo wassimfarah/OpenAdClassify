@@ -51,6 +51,16 @@ export class SubcategoryController {
     }
   }
 
+  @Get('by-category/:categoryId')
+  async findAllSubcategoriesByCategoryId(@Param('categoryId') categoryId: string) {
+    try {
+      const subcategories = await this.subcategoryService.findAllSubcategoriesByCategoryId(categoryId);
+      return createSuccessResponse(subcategories, 'Subcategories fetched successfully by category ID');
+    } catch (error) {
+      return createErrorResponse('Failed to fetch subcategories', error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   @Delete(':id')
   async remove(@Param('id') id: string) {
     try {

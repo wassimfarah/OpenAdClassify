@@ -8,20 +8,36 @@ import {
   Body,
   HttpException,
   HttpStatus,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { AdService } from './ad.service';
 import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
 import { createErrorResponse } from 'src/utils/common/response.util';
+import { AccessTokenAuthGuard } from 'src/guards/access-token-auth.guard';
+
 
 @Controller('ads')
 export class AdController {
   constructor(private readonly adService: AdService) {}
 
   @Post()
-  async create(@Body() createAdDto: CreateAdDto) {
+  @UseGuards(AccessTokenAuthGuard)
+  async create(@Body() createAdDto: CreateAdDto, @Req() request: Request) {
+    const user = request.user as { sub: number }; // Type assertion for the user
+    if (!user || !user.sub) {
+      throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
+    }
+    // Set the createdById field using user.sub
+    const adDtoWithUser = {
+      ...createAdDto,
+      createdById: user.sub, // Assign user.sub to createdById
+    };
+
     try {
-      return await this.adService.create(createAdDto);
+      return await this.adService.create(adDtoWithUser);
     } catch (error) {
       throw new HttpException(
         createErrorResponse('Error creating ad', error.message),

@@ -6,7 +6,6 @@ import { Request } from 'express';
 import { createSuccessResponse, createErrorResponse } from 'src/utils/common/response.util'; // Adjust the import path if needed
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/commun/decorators ';
-import { AuthGuard } from '@nestjs/passport';
 
 @Controller('users')
 export class UsersController {
