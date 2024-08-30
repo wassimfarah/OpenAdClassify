@@ -1,13 +1,12 @@
-// src/app/page.tsx
 import React from 'react';
-import LoginControl from './components/LoginControl';
-import ThemeControl from './components/ThemeControl';
-
-const Page = () => {
+import Ads from './components/Ads';
+const HomePage: React.FC = () => {
   return (
-    <div className="container">
+    <div>
+      <h1>Home Page</h1>
+      <Ads />
     </div>
   );
 };
 
-export default Page;
+export default HomePage

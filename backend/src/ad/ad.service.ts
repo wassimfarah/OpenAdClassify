@@ -102,23 +102,23 @@ export class AdService {
         where: { id },
         include: {
           media: true, // Include the media field when fetching a specific ad
+          createdBy: true, // Include the user who created the ad
         },
       });
-
       if (!ad) {
         throw new HttpException(
           createErrorResponse('Ad not found', 'The requested ad does not exist'),
           HttpStatus.NOT_FOUND,
         );
       }
-
+      
       // Convert timestamps to the desired timezone based on the UTC offset
       const adWithConvertedTimes = {
         ...ad,
         createdAt: convertUtcToOffset(ad.createdAt, this.utcOffsetHours),
         updatedAt: convertUtcToOffset(ad.updatedAt, this.utcOffsetHours),
       };
-
+ 
       return createSuccessResponse(adWithConvertedTimes, 'Ad fetched successfully');
     } catch (error) {
       throw new HttpException(
