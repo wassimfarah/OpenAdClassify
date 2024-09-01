@@ -30,6 +30,12 @@ export class SubcategoryService {
     });
   }
 
+  async findAllSubcategoriesByCategoryId(categoryId: string) {
+    return this.prisma.subcategory.findMany({
+      where: { categoryId },
+    });
+  }
+
   async remove(id: string) {
     return this.prisma.subcategory.delete({
       where: { id },

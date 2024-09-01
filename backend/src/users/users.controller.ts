@@ -1,12 +1,11 @@
 import { Body, Controller, Post, Get, UseGuards, Req, UnauthorizedException, NotFoundException } from '@nestjs/common';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { AccessTokenAuthGuard } from 'src/guards/access-token-auth.guard';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Request } from 'express';
 import { createSuccessResponse, createErrorResponse } from 'src/utils/common/response.util'; // Adjust the import path if needed
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/commun/decorators ';
-import { AuthGuard } from '@nestjs/passport';
 
 @Controller('users')
 export class UsersController {
@@ -23,7 +22,7 @@ export class UsersController {
   }
 
   @Get('profile')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenAuthGuard)
   async getProfile(@Req() request: Request) {
     // Access the user from the request object
     const user = request.user as { sub: number }; // Ensure TypeScript knows the user structure
@@ -47,7 +46,7 @@ export class UsersController {
   }
 
   @Post('admin-only')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(AccessTokenAuthGuard, RolesGuard)
   @Roles('admin') // Only 'admin' can access this route
   adminOnlyAction(@Req() request) {
     return { message: 'Admin action performed' };
