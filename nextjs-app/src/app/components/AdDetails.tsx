@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -7,6 +7,10 @@ import { Carousel } from 'react-bootstrap';
 
 interface AdDetailsProps {
   adId: string;
+}
+
+interface Media {
+  b64: string;
 }
 
 interface Ad {
@@ -28,7 +32,7 @@ interface Ad {
   };
   createdAt: string;
   updatedAt: string;
-  media: { url: string }[];
+  mediaData: Media[]; // Updated to an array
   numberOfImpressions: number;
 }
 
@@ -50,7 +54,7 @@ const AdDetails: React.FC<AdDetailsProps> = ({ adId }) => {
           url: `${process.env.NEXT_PUBLIC_BACKEND_URL_GET_AD}/${adId}`,
           useCredentials: true,
         });
-        setAd(response.data);
+        setAd(response.data.ad);  
       } catch (error) {
         setError('Error fetching ad details');
         console.error('Error fetching ad details:', error);
@@ -80,12 +84,12 @@ const AdDetails: React.FC<AdDetailsProps> = ({ adId }) => {
           {/* Carousel Column */}
           <div className="col-md-6 mb-4 d-flex">
             <Carousel className="w-100 border rounded" style={{ borderWidth: '1px' }}>
-              {ad.media.length > 0 ? (
-                ad.media.map((mediaItem, index) => (
+              {ad.mediaData.length > 0 ? (
+                ad.mediaData?.map((mediaItem, index) => (
                   <Carousel.Item key={index}>
                     <img
                       className="d-block w-100"
-                      src={mediaItem.url || placeholderImage}
+                      src={mediaItem.b64 ? `data:image/png;base64,${mediaItem.b64}` : placeholderImage}
                       alt={`Slide ${index + 1}`}
                       style={{ height: '300px', objectFit: 'cover' }}
                     />

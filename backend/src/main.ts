@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as dotenv from 'dotenv';
 import * as cookieParser from 'cookie-parser';
+import * as bodyParser from 'body-parser'; // Import body-parser
 
 dotenv.config();
 
@@ -24,6 +25,9 @@ async function bootstrap() {
 
   // Middleware to parse cookies
   app.use(cookieParser());
+
+  // Middleware to parse URL-encoded payloads
+  app.use(bodyParser.urlencoded({ extended: true }));
 
   const port = process.env.PORT; // Default to port 3000 if not specified
   await app.listen(port);

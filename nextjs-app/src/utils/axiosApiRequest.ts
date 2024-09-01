@@ -48,6 +48,8 @@ interface ApiRequestParams {
   data?: any;
   config?: AxiosRequestConfig;
   useCredentials?: boolean;
+  headers?: Record<string, string>; 
+
 }
 
 // Create the apiRequest function using the Axios instance
@@ -56,6 +58,7 @@ export const apiRequest = async ({
   url,
   data,
   config,
+  headers = {}, 
   useCredentials = false,
 }: ApiRequestParams) => {
   // Create a default configuration object
@@ -64,6 +67,7 @@ export const apiRequest = async ({
     url,
     data,
     withCredentials: useCredentials, // Set to true if credentials are required
+    headers,
     ...config,
   };
 
