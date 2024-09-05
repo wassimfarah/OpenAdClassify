@@ -43,6 +43,9 @@ id             Int      @id @default(autoincrement())
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   ads            Ad[]      // Define the reverse relation here
+  conversations       Conversation[]  @relation("UserConversations") 
+  sentMessages        Message[]       @relation("SenderMessages") 
+  receivedMessages    Message[]       @relation("ReceiverMessages") 
 }
 
 model Ad {
@@ -67,6 +70,8 @@ model Ad {
   updatedAt       DateTime  @updatedAt
   media           Media[]
   numberOfImpressions Int @default(0)
+  conversations     Conversation[]
+
 }
 
 model Category {
@@ -92,4 +97,27 @@ model Media {
   updatedAt DateTime   @updatedAt
   ad        Ad?        @relation(fields: [adId], references: [id])
   adId      String?
+}
+
+model Conversation {
+  id            Int         @id @default(autoincrement())
+  participants  User[]      @relation("UserConversations") // Unidirectional relation to User
+  messages      Message[]
+  ad            Ad?         @relation(fields: [adId], references: [id])
+  adId          String?    
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  senderId       Int
+  sender         User         @relation("SenderMessages", fields: [senderId], references: [id])
+  receiverId     Int
+  receiver       User         @relation("ReceiverMessages", fields: [receiverId], references: [id])
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  content        String
+  isRead         Boolean      @default(false) 
+  createdAt      DateTime     @default(now())
 }

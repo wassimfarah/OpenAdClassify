@@ -45,6 +45,7 @@ function NavScrollExample() {
           >
             <Nav.Link href="/" as={Link}>Home</Nav.Link>
             <Nav.Link href="/help" as={Link}>Help</Nav.Link>
+            <Nav.Link href="/messages" as={Link}>Messages</Nav.Link>
           </Nav>
 
           {/* Centered Create Ad Dropdown */}

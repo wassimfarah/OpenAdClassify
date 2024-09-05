@@ -1,12 +1,14 @@
 // src/utils/store.ts
 import { configureStore } from '@reduxjs/toolkit';
 import themeReducer from './themeSlice';
-import authReducer from './authSlice'; // Import the new auth slice
+import authReducer from './authSlice';
+import conversationReducer from './conversationSlice';
 
 export const store = configureStore({
   reducer: {
     theme: themeReducer,
-    auth: authReducer, // Add the auth slice to the store
+    auth: authReducer,
+    conversation: conversationReducer, 
   },
 });
 

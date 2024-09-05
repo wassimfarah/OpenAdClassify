@@ -1,13 +1,12 @@
-'use client'
+'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiRequest } from '@/utils/axiosApiRequest';
 import { Carousel } from 'react-bootstrap';
-
-interface AdDetailsProps {
-  adId: string;
-}
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/Redux/store';
+import { setSelectedConversationId } from '@/Redux/conversationSlice';
 
 interface Media {
   b64: string;
@@ -32,16 +31,19 @@ interface Ad {
   };
   createdAt: string;
   updatedAt: string;
-  mediaData: Media[]; // Updated to an array
+  mediaData: Media[];
   numberOfImpressions: number;
 }
 
-const AdDetails: React.FC<AdDetailsProps> = ({ adId }) => {
+const AdDetails: React.FC<{ adId: string }> = ({ adId }) => {
+  const dispatch = useDispatch();
   const router = useRouter();
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { user } = useSelector((state: RootState) => state.auth);
+  
   const placeholderImage = '/images/adCardPH.png';
 
   useEffect(() => {
@@ -66,31 +68,50 @@ const AdDetails: React.FC<AdDetailsProps> = ({ adId }) => {
     fetchAdDetails();
   }, [adId]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+  const handleContactClick = async () => {
+    if (!ad) return;
+    try {
+      const response = await apiRequest({
+        method: 'POST',
+        url: `${process.env.NEXT_PUBLIC_BACKEND_URL_CREATE_OR_FIND_CONVERSATION}`,
+        useCredentials: true,
+        data: {
+          userIds: ad.createdBy.id,
+          adId: ad.id,
+        },
+      });
+      const conversation = response.data.conversation;
+  
+      dispatch(setSelectedConversationId(conversation.id));
+      router.push('/messages');
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      setError('Failed to start a conversation. Please try again.');
+    }
+  };
+
+  if (loading) return <div className="spinner-border text-primary" role="status"><span className="sr-only">Loading...</span></div>;
+  if (error) return <div className="alert alert-danger">Error: {error}</div>;
 
   return (
     <div className="container mt-4">
-      {/* Back Button */}
       <button className="btn btn-secondary mb-4" onClick={() => router.back()}>
         Back
       </button>
 
       {ad && (
         <div className="row d-flex align-items-stretch">
-          {/* Ad Title */}
-          <h2 className="mb-4 text-center">{ad.title}</h2>
+          <h2 className="mb-4 text-center"><strong>{ad.title}</strong></h2>
 
-          {/* Carousel Column */}
           <div className="col-md-6 mb-4 d-flex">
             <Carousel className="w-100 border rounded" style={{ borderWidth: '1px' }}>
               {ad.mediaData.length > 0 ? (
-                ad.mediaData?.map((mediaItem, index) => (
+                ad.mediaData.map((mediaItem, index) => (
                   <Carousel.Item key={index}>
                     <img
                       className="d-block w-100"
                       src={mediaItem.b64 ? `data:image/png;base64,${mediaItem.b64}` : placeholderImage}
-                      alt={`Slide ${index + 1}`}
+                      alt={`Ad media ${index + 1}`}
                       style={{ height: '300px', objectFit: 'cover' }}
                     />
                   </Carousel.Item>
@@ -108,7 +129,6 @@ const AdDetails: React.FC<AdDetailsProps> = ({ adId }) => {
             </Carousel>
           </div>
 
-          {/* Ad Details Column */}
           <div className="col-md-6 d-flex p-0 m-0">
             <div className="card w-100">
               <div className="card-body">
@@ -120,11 +140,12 @@ const AdDetails: React.FC<AdDetailsProps> = ({ adId }) => {
                 {ad.acceptMessages && (
                   <>
                     <p><strong>Contact:</strong></p>
-                    <button className="btn btn-primary mb-2">Send Message</button>
+                    <button disabled={user?.sub === ad.createdBy.id} onClick={handleContactClick} className="btn btn-primary mb-2">Send Message</button>
                   </>
                 )}
                 <div>
-                  <p><strong>Phone:</strong> {ad.createdBy.phoneNumber}</p> {/* Display phone number */}
+                  <p><strong>Username: </strong>{ad.createdBy.username}</p>
+                  <p><strong>Phone:</strong> {ad.createdBy.phoneNumber}</p>
                   <button className="btn btn-success">Contact via WhatsApp</button>
                 </div>
               </div>

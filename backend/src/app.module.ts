@@ -11,6 +11,7 @@ import { AdModule } from './ad/ad.module';
 import { CategoryModule } from './category/category.module';
 import { SubcategoryModule } from './subcategory/subcategory.module';
 import { MediaModule } from './media/media.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { MediaModule } from './media/media.module';
     CategoryModule,
     SubcategoryModule,
     MediaModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService, RedisService],
