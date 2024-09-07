@@ -47,6 +47,9 @@ export class UsersService {
   async findUserById(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      include: {
+        ads: true, 
+      },
     });
 
     // Convert timestamps to the desired timezone

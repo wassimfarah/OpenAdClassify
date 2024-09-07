@@ -3,7 +3,9 @@ const protectedRoutes = [
      '/dashboard',
       '/admin',
       '/createAd/sell',
-      '/messages'
+      '/messages',
+      '/update-ad',
+      '/ads-history'
     ]; // Routes that require authentication
 const restrictedRoutes = ['/login', '/register']; // Routes that logged-in users cannot access
 

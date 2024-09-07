@@ -38,11 +38,11 @@ id             Int      @id @default(autoincrement())
   email          String    @unique
   phoneNumber    String    @unique
   password       String
-  profilePicture String?   // Optional field for profile picture URL
+  profilePicture String?  
   role           UserRole  @default(USER)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-  ads            Ad[]      // Define the reverse relation here
+  ads            Ad[]     
   conversations       Conversation[]  @relation("UserConversations") 
   sentMessages        Message[]       @relation("SenderMessages") 
   receivedMessages    Message[]       @relation("ReceiverMessages") 
@@ -55,9 +55,7 @@ model Ad {
   price           Float
   minimumPrice    Float
   type            AdType
-  acceptOffer     Boolean
   acceptMessages  Boolean
-  acceptExchange  Boolean
   location        String
   adStatus        AdStatus
   category        Category  @relation(fields: [categoryId], references: [id])
@@ -91,7 +89,7 @@ model Subcategory {
 
 model Media {
   id        String     @id @default(uuid())
-  url       String     // URL or path to the media file
+  url       String    
   type      MediaType
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -101,7 +99,7 @@ model Media {
 
 model Conversation {
   id            Int         @id @default(autoincrement())
-  participants  User[]      @relation("UserConversations") // Unidirectional relation to User
+  participants  User[]      @relation("UserConversations")
   messages      Message[]
   ad            Ad?         @relation(fields: [adId], references: [id])
   adId          String?    

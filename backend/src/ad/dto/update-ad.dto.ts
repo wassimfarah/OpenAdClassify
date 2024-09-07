@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsBoolean, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsNumber, IsBoolean, IsOptional, IsEnum, IsInt } from 'class-validator';
 import { AdType, AdStatus } from '@prisma/client';
 
 export class UpdateAdDto {
@@ -16,29 +16,17 @@ export class UpdateAdDto {
 
   @IsOptional()
   @IsNumber()
-  desiredPrice?: number;
-
-  @IsOptional()
-  @IsNumber()
   minimumPrice?: number;
 
   @IsOptional()
   @IsEnum(AdType)
   type?: AdType;
 
-  @IsOptional()
+  @IsOptional() 
   @IsBoolean()
-  acceptOffer?: boolean;
+  acceptMessages: boolean;
 
-  @IsOptional()
-  @IsBoolean()
-  acceptMessages?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  acceptExchange?: boolean;
-
-  @IsOptional()
+  @IsOptional() 
   @IsString()
   location?: string;
 
@@ -46,15 +34,22 @@ export class UpdateAdDto {
   @IsEnum(AdStatus)
   adStatus?: AdStatus;
 
-  @IsOptional()
+  @IsOptional() 
   @IsString()
   categoryId?: string;
 
-  @IsOptional()
+  @IsOptional() 
   @IsString()
   subcategoryId?: string;
 
+  @IsOptional() 
+  @IsInt()
+  createdById?: number;
+
   @IsOptional()
-  @IsString()
+  @IsString({ each: true })
   mediaIds?: string[];
+
+  @IsOptional()
+  updatedAt?: Date;
 }

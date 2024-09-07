@@ -7,6 +7,7 @@ import * as dotenv from 'dotenv';
 import { join } from 'path';
 import { createReadStream, existsSync } from 'fs';
 import { Buffer } from 'buffer';
+import { promises as fs } from 'fs';
 
 dotenv.config();
 
@@ -63,13 +64,45 @@ export class MediaService {
       updatedAt: convertUtcToOffset(media.updatedAt, this.utcOffsetHours),
     };
   }
-
-  async remove(id: string) {
-    return this.prisma.media.delete({
-      where: { id },
-    });
+  
+  async remove(id: string): Promise<void> {
+  
+    // Retrieve media record from database
+    const media = await this.prisma.media.findUnique({ where: { id } });
+  
+    if (!media) {
+      throw new NotFoundException('Media not found');
+    }
+  
+  
+      // Construct the file path directly from media.url
+  const filePath = join(__dirname, '..', '..', '..', media.url.replace(/^\//, ''));
+    try {
+      // Check if file exists and then delete
+      if (await fs.access(filePath).then(() => true).catch(() => false)) {
+        await fs.unlink(filePath);
+      } else {
+      }
+    } catch (error) {
+      console.error(`Failed to delete file at path: ${filePath}`, error);
+      throw new HttpException('Failed to delete file', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  
+    // Remove media record from database
+    await this.prisma.media.delete({ where: { id } });
   }
-
+  
+  async deleteFile(fileUrl: string) {
+   const filePath = fileUrl
+    try {
+      if (existsSync(filePath)) {
+        await fs.unlink(filePath);
+      }
+    } catch (error) {
+      console.error(`Failed to delete file: ${filePath}`, error);
+      throw new HttpException('Failed to delete file', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
   // New file handling methods
 
   async streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {

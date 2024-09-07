@@ -67,11 +67,16 @@ function NavScrollExample() {
           {/* Preferences */}
           <Nav className="d-flex">
             {loggedIn && user ? (
-              <NavDropdown align="end" title={`Welcome, ${user.username}`} id="user-dropdown">
-                <NavDropdown.Item onClick={handleLogout}>
-                  Logout
-                </NavDropdown.Item>
-              </NavDropdown>
+              <>
+                <NavDropdown align="end" title={`Welcome, ${user.username}`} id="user-dropdown">
+                  <NavDropdown.Item as={Link} href="/ads-history">
+                    Ads History
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={handleLogout}>
+                    Logout
+                  </NavDropdown.Item>
+                </NavDropdown>
+              </>
             ) : (
               <>
                 <Nav.Link as={Link} href="/register">

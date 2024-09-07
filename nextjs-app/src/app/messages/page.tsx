@@ -125,14 +125,14 @@ const MessagesPage = () => {
       <div style={styles.conversationList}>
         <h2>Conversations</h2>
         <ul>
-          {conversations.map(conversation => (
+          {conversations?.map(conversation => (
             <li
               key={conversation.id}
               onClick={() => setSelectedConversation(conversation)}
               style={styles.conversationItem(selectedConversation?.id === conversation.id)}
             >
-              {conversation.ad.title}
-            </li>
+              {conversation?.ad?.title || 'Deleted Ad'} {/* Display 'Deleted Ad' if title is missing */}
+              </li>
           ))}
         </ul>
       </div>
@@ -141,7 +141,7 @@ const MessagesPage = () => {
         {selectedConversation ? (
           <>
             <ul>
-              {messages.map(message => (
+              {messages?.map(message => (
                 <li key={message.id}>
                   <strong>{user?.sub === message.senderId ? 'You: ' : `${message.sender?.username}: `}</strong>
                   {message.content}
