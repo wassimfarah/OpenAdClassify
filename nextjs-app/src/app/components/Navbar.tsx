@@ -10,9 +10,12 @@ import NavDropdown from 'react-bootstrap/NavDropdown';
 import Link from 'next/link';
 import { Dropdown } from 'react-bootstrap';
 import { apiRequest } from '../../utils/axiosApiRequest'; // Import the apiRequest function
+import { resetPendingMessageCount } from '@/Redux/pendingMessageSlice';
 
 function NavScrollExample() {
   const { loggedIn, user } = useSelector((state: RootState) => state.auth);
+  const receivedMessagesCount = useSelector((state: RootState) => state.message.pendingMessageCount); // Select receivedMessagesCount from Redux
+
   const dispatch = useDispatch();
 
   const handleLogout = async () => {
@@ -32,6 +35,22 @@ function NavScrollExample() {
     }
   };
 
+  const handleMessagesClick = async () => {
+    try {
+      // Reset received messages count on the backend
+      await apiRequest({
+        method: 'PATCH',
+        url: `${process.env.NEXT_PUBLIC_BACKEND_URL_RESET_PENDING_MESSAGES_COUNT}`, 
+        useCredentials: true,
+      });
+
+      // Reset the pending message count in Redux
+      dispatch(resetPendingMessageCount());
+    } catch (error) {
+      console.error('Failed to reset pending message count:', error.message);
+    }
+  };
+
   return (
     <Navbar expand="lg" className="bg-body-tertiary">
       <Container fluid>
@@ -45,7 +64,17 @@ function NavScrollExample() {
           >
             <Nav.Link href="/" as={Link}>Home</Nav.Link>
             <Nav.Link href="/help" as={Link}>Help</Nav.Link>
-            <Nav.Link href="/messages" as={Link}>Messages</Nav.Link>
+            <Nav.Link 
+              href="/messages" 
+              as={Link} 
+              onClick={handleMessagesClick}
+              style={{
+                color: receivedMessagesCount > 0 ? 'red' : 'inherit',
+                fontWeight: receivedMessagesCount > 0 ? 'bold' : 'normal',
+              }}
+            >
+              Messages {receivedMessagesCount > 0 && `(${receivedMessagesCount})`}
+            </Nav.Link>
           </Nav>
 
           {/* Centered Create Ad Dropdown */}
@@ -90,7 +119,7 @@ function NavScrollExample() {
             <NavDropdown align="end" title="⚙️" id="preferences-dropdown">
               <NavDropdown.Item>
                 {/* Language Switcher */}
-                  <Link href="/" locale="en">Language</Link>
+                <Link href="/" locale="en">Language</Link>
               </NavDropdown.Item>
               <NavDropdown.Divider />
               <NavDropdown.Item>

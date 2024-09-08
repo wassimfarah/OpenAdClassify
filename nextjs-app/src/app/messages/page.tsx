@@ -2,15 +2,22 @@
 
 import { Button, Form } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/Redux/store';
 import { apiRequest } from '@/utils/axiosApiRequest';
 import socket from '@/chat/socket';
+import { highlightConversation } from '@/Redux/conversationStyleSlice';
 
 interface Conversation {
   id: number;
   ad: { title: string };
   participants: { id: number }[];
+  lastMessage: {
+    id: number;
+    content: string;
+    isRead: boolean;
+    receiverId: number;
+  };
 }
 
 interface Message {
@@ -21,12 +28,14 @@ interface Message {
 }
 
 const MessagesPage = () => {
+  const dispatch = useDispatch();
   const { selectedConversationId } = useSelector((state: RootState) => state.conversation);
   const { user } = useSelector((state: RootState) => state.auth);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [newMessage, setNewMessage] = useState('');
+  const highlightedConversationId = useSelector((state: RootState) => state.conversationStyle.highlightedConversationId);
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -36,14 +45,26 @@ const MessagesPage = () => {
           url: `${process.env.NEXT_PUBLIC_BACKEND_URL_GET_CONVERSATIONS}`,
           useCredentials: true,
         });
-        setConversations(response.data);
+
+        const updatedConversations = response.data.map((conversation: Conversation) => {
+          if (
+            conversation.lastMessage &&
+            conversation.lastMessage.receiverId === user.sub &&
+            !conversation.lastMessage.isRead
+          ) {
+            return { ...conversation, isUnread: true }; 
+          }
+          return conversation;
+        });
+
+        setConversations(updatedConversations);
       } catch (error) {
         console.error('Failed to fetch conversations', error);
       }
     };
 
     fetchConversations();
-  }, []);
+  }, [user.sub]);
 
   useEffect(() => {
     if (selectedConversationId) {
@@ -55,23 +76,37 @@ const MessagesPage = () => {
   }, [selectedConversationId, conversations]);
 
   useEffect(() => {
-    if (!selectedConversation) return;
+    if (selectedConversation) {
+      const fetchMessages = async () => {
+        try {
+          const response = await apiRequest({
+            method: 'GET',
+            url: `${process.env.NEXT_PUBLIC_BACKEND_URL_GET_CONVERSATIONS_BY_ID}/${selectedConversation.id}`,
+            useCredentials: true,
+          });
+          setMessages(response.data);
 
-    const fetchMessages = async () => {
-      try {
-        const response = await apiRequest({
-          method: 'GET',
-          url: `${process.env.NEXT_PUBLIC_BACKEND_URL_GET_CONVERSATIONS_BY_ID}/${selectedConversation.id}`,
-          useCredentials: true,
-        });
-        setMessages(response.data);
-        socket.emit('joinRoom', selectedConversation.id.toString());
-      } catch (error) {
-        console.error('Failed to fetch messages', error);
-      }
-    };
+          // Emit event to join the chat room
+          socket.emit('joinRoom', selectedConversation.id.toString());
 
-    fetchMessages();
+          // Get the ID of the last message
+          const lastMessageId = selectedConversation.lastMessage?.id;
+
+          if (lastMessageId) {
+            // Mark the last message as read
+            await apiRequest({
+              method: 'PATCH',
+              url: `${process.env.NEXT_PUBLIC_BACKEND_URL_MARK_MESSAGE_READ}/${selectedConversation.id}/${lastMessageId}`,
+              useCredentials: true,
+            });
+          }
+        } catch (error) {
+          console.error('Failed to fetch messages', error);
+        }
+      };
+
+      fetchMessages();
+    }
   }, [selectedConversation]);
 
   useEffect(() => {
@@ -84,17 +119,15 @@ const MessagesPage = () => {
     };
 
     socket.on('send_message', handleNewMessage);
-
     return () => {
       socket.off('send_message', handleNewMessage);
     };
   }, []);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!selectedConversation) return;
 
-    const receiverId = selectedConversation.participants.find(p => p.id !== user.id)?.id;
-
+    const receiverId = selectedConversation.participants.find(p => p.id !== user?.sub)?.id;
     if (receiverId) {
       socket.emit('send_message', {
         senderId: user.sub,
@@ -102,21 +135,42 @@ const MessagesPage = () => {
         conversationId: selectedConversation.id,
         content: newMessage,
       });
+
+      // Notify receiver
+      socket.emit('notifyReceiver', {
+        receiverId,
+        conversationId: selectedConversation.id,
+      });
+
+      // Update pending message count on the backend
+      await apiRequest({
+        method: 'POST',
+        url: `${process.env.NEXT_PUBLIC_BACKEND_URL_PENDING_MESSAGES_COUNT}`,
+        data: { userId: receiverId },
+        useCredentials: true,
+      });
     }
 
     setNewMessage('');
+  };
+
+  const handleConversationClick = (conversation: Conversation) => {
+    setSelectedConversation(conversation);
+    dispatch(highlightConversation(conversation.id));
   };
 
   const styles = {
     container: { display: 'flex', height: '100vh' },
     conversationList: { width: '30%', borderRight: '1px solid #ccc', padding: '10px' },
     messagePanel: { width: '70%', padding: '10px' },
-    conversationItem: (isSelected: boolean) => ({
+    conversationItem: (isSelected: boolean, isUnread: boolean, isHighlighted: boolean) => ({
       cursor: 'pointer',
       marginBottom: '10px',
       padding: '5px',
       borderRadius: '4px',
-      backgroundColor: isSelected ? '#f0f0f0' : 'transparent',
+      backgroundColor: isSelected ? '#DDD' : isHighlighted ? '#e0f7fa' : 'transparent', // Change background color if highlighted
+      fontWeight: isUnread ? 'bold' : 'normal', // Apply bold style if conversation is unread
+     // color: isHighlighted ? 'blue' : 'black', // Change text color if highlighted
     }),
   };
 
@@ -128,11 +182,15 @@ const MessagesPage = () => {
           {conversations?.map(conversation => (
             <li
               key={conversation.id}
-              onClick={() => setSelectedConversation(conversation)}
-              style={styles.conversationItem(selectedConversation?.id === conversation.id)}
+              onClick={() => handleConversationClick(conversation)}
+              style={styles.conversationItem(
+                selectedConversation?.id === conversation.id,
+                conversation.isUnread,
+                highlightedConversationId === conversation.id
+              )}
             >
               {conversation?.ad?.title || 'Deleted Ad'} {/* Display 'Deleted Ad' if title is missing */}
-              </li>
+            </li>
           ))}
         </ul>
       </div>

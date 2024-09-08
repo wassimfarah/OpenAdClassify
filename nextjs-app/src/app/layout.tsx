@@ -9,6 +9,8 @@ import { store } from '../Redux/store';
 import CheckAuth from './components/CheckAuth';
 import { useState } from 'react';
 import RouteAuthGuard from './components/RouteAccessControl ';
+import SocketManager from './components/SocketManager';
+import PendingMessageCountFetcher from './components/PendingMessageCountFetcher';
 
 export default function Layout({ children }: { children: ReactNode }) {
   const [authChecked, setAuthChecked] = useState(false);
@@ -24,13 +26,15 @@ export default function Layout({ children }: { children: ReactNode }) {
           <CheckAuth onAuthComplete={handleAuthComplete} />
           {authChecked ? (
             <>
-            <RouteAuthGuard>
-              <CustomNavbar />
-              {children}
-            </RouteAuthGuard>
+              <RouteAuthGuard>
+                <CustomNavbar />
+                {children}
+              </RouteAuthGuard>
+              <SocketManager /> 
+              <PendingMessageCountFetcher/>
             </>
           ) : (
-            <div></div> // Show Spinner state while auth is checked
+            <div>Loading...</div> // Show Spinner or loading state while auth is checked
           )}
         </Provider>
       </body>

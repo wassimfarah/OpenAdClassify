@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, Req } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Req, Patch } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { AccessTokenAuthGuard } from 'src/guards/access-token-auth.guard';
 import { UseGuards } from '@nestjs/common';
@@ -33,4 +33,17 @@ async getMessages(@Param('conversationId') conversationId: string, @Req() req) {
   const userId = req.user.sub; 
   return this.chatService.getMessages(Number(conversationId)); 
 }
+
+@UseGuards(AccessTokenAuthGuard)
+@Patch('mark-message-read/:conversationId/:messageId')
+async markMessageAsRead(
+  @Param('conversationId') conversationId: string,
+  @Param('messageId') messageId: string,
+  @Req() req
+) {
+  const userId = req.user.sub; // Current user's ID
+  return this.chatService.markMessageAsRead(Number(conversationId), Number(messageId));
+}
+
+
 }

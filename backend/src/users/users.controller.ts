@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, UseGuards, Req, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { Body, Controller, Post, Get, UseGuards, Req, UnauthorizedException, NotFoundException, Patch } from '@nestjs/common';
 import { AccessTokenAuthGuard } from 'src/guards/access-token-auth.guard';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -44,6 +44,61 @@ export class UsersController {
       return createErrorResponse('Failed to retrieve user profile', error.message);
     }
   }
+
+  @Get('pending-messages/count')
+  @UseGuards(AccessTokenAuthGuard)
+  async getPendingMessageCount(@Req() request: Request) {
+    const user = request.user as { sub: number };
+
+    if (!user || !user.sub) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
+    try {
+      const userProfile = await this.usersService.findUserById(user.sub);
+      return createSuccessResponse({ count: userProfile.pendingMessageCount }, 'Pending message count retrieved successfully');
+    } catch (error) {
+      return createErrorResponse('Failed to retrieve pending message count', error.message);
+    }
+  }
+
+  @Post('pending-messages/count')
+  @UseGuards(AccessTokenAuthGuard)
+  async incrementPendingMessageCount(@Body() body: { userId: number }) {
+    const { userId } = body;
+  
+    if (!userId) {
+      throw new UnauthorizedException('User ID must be provided');
+    }
+  
+    try {
+      // Increment the pending message count by 1
+      await this.usersService.incrementPendingMessageCountByOne(userId);
+  
+      return createSuccessResponse(null, 'Pending message count incremented successfully');
+    } catch (error) {
+      return createErrorResponse('Failed to increment pending message count', error.message);
+    }
+  }
+  
+@Patch('pending-messages/reset')
+@UseGuards(AccessTokenAuthGuard)
+async resetPendingMessageCount(@Req() request: Request) {
+
+  const user = request.user as { sub: number };
+console.log("reseting count!!!")
+
+  if (!user || !user.sub) {
+    throw new UnauthorizedException('User not authenticated');
+  }
+
+  try {
+    await this.usersService.resetPendingMessageCount(user.sub);
+    return createSuccessResponse(null, 'Pending message count reset successfully');
+  } catch (error) {
+    return createErrorResponse('Failed to reset pending message count', error.message);
+  }
+}
 
   @Post('admin-only')
   @UseGuards(AccessTokenAuthGuard, RolesGuard)

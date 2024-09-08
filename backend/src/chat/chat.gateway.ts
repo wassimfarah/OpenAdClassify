@@ -32,6 +32,35 @@ export class ChatGateway
     console.log('Client disconnected:', client.id);
   }
 
+  @SubscribeMessage('userConnected')
+  handleUserConnected(
+    @MessageBody() data: { userId: number },
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log(`User connected: ${data.userId}, socket: ${client.id}`);
+    this.chatService.addUserSocket(data.userId, client.id);
+    console.log('User socket stored');
+  }
+
+  @SubscribeMessage('notifyReceiver')
+  notifyReceiver(
+    @MessageBody() data: { receiverId: number; conversationId: number },
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log(`Notifying receiver: ${data.receiverId}`);
+    
+    const receiverSocketId = this.chatService.getUserSocketId(data.receiverId);
+    if (receiverSocketId) {
+      this.server.to(receiverSocketId).emit('notifyReceiver', {
+        message: 'You have a new message',
+        conversationId: data.conversationId,
+      });
+      console.log(`Notification sent to socket: ${receiverSocketId}`);
+    } else {
+      console.log('Receiver not connected, unable to send notification.');
+    }
+  }
+
     // Join a specific room
     @SubscribeMessage('joinRoom')
     handleJoinRoom(@ConnectedSocket() client: Socket, @MessageBody() room: string) {

@@ -46,6 +46,8 @@ id             Int      @id @default(autoincrement())
   conversations       Conversation[]  @relation("UserConversations") 
   sentMessages        Message[]       @relation("SenderMessages") 
   receivedMessages    Message[]       @relation("ReceiverMessages") 
+  pendingMessageCount  Int           @default(0)
+
 }
 
 model Ad {

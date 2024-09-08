@@ -1,9 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service'; // Import your Prisma service
-import { createSuccessResponse } from 'src/utils/common/response.util';
+import { createSuccessResponse, createErrorResponse } from 'src/utils/common/response.util';
 @Injectable()
 export class ChatService {
+  private userSocketMap: Map<number, string> = new Map(); // Map of userId to socketId
+
   constructor(private readonly prisma: PrismaService) {}
+ 
+  // Store user's socket ID when they connect
+  addUserSocket(userId: number, socketId: string) {
+    this.userSocketMap.set(userId, socketId);
+  }
+
+    // Remove user's socket ID when they disconnect
+    removeUserSocket(socketId: string) {
+      for (const [userId, id] of this.userSocketMap.entries()) {
+        if (id === socketId) {
+          this.userSocketMap.delete(userId);
+          break;
+        }
+      }
+    }
+
+    // Retrieve user's socket ID
+    getUserSocketId(userId: number): string | undefined {
+      return this.userSocketMap.get(userId);
+    }
 
   // Method to create or find a conversation
   async createOrFindConversation(userIds: number[], adId: string): Promise<any> {
@@ -97,7 +119,7 @@ export class ChatService {
   }
       
   async getConversations(userId: number) {
-    // Fetch conversations for the user, including ad details
+    // Fetch conversations for the user, including ad details and last message
     const conversations = await this.prisma.conversation.findMany({
       where: {
         participants: {
@@ -109,11 +131,33 @@ export class ChatService {
       include: {
         ad: true, // Include the related ad in the result
         participants: true, // Optional: Include participants if needed
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1, // Only get the last message
+          select: {
+            id: true,
+            content: true,
+            isRead: true,
+            createdAt: true,
+            receiverId: true, // Include receiverId in the last message selection
+          },
+        },
       },
     });
-
-    return createSuccessResponse(conversations, "All conversations associated with the sender fetched");
+  
+    // Map conversations to include lastMessage directly
+    const result = conversations.map(conversation => {
+      const lastMessage = conversation.messages[0] || null;
+      return {
+        ...conversation,
+        lastMessage, // Add last message field to the response
+      };
+    });
+  
+    return createSuccessResponse(result, "All conversations associated with the user fetched");
   }
+  
+  
 
   async getMessages(conversationId: number): Promise<any> {
     const messages = await this.prisma.message.findMany({
@@ -145,6 +189,20 @@ export class ChatService {
   
     return createSuccessResponse(messages, "Messages fetched successfully along with user details.");
   }
+
+  async markMessageAsRead(conversationId: number, messageId: number) {
+    await this.prisma.message.updateMany({
+      where: {
+        conversationId: conversationId,
+        id: messageId,
+        isRead: false, // Optional check to update only if not already read
+      },
+      data: {
+        isRead: true,
+      },
+    });
+  }
+  
 }
 
 
