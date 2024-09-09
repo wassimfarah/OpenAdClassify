@@ -120,4 +120,6 @@ model Message {
   content        String
   isRead         Boolean      @default(false) 
   createdAt      DateTime     @default(now())
+  seenAt         DateTime?    // Add this line
+
 }

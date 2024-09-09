@@ -61,6 +61,25 @@ export class ChatGateway
     }
   }
 
+  @SubscribeMessage('messageSeen')
+async handleMessageSeen(
+  @MessageBody() data: { messageId: number; userId: number },
+  @ConnectedSocket() client: Socket,
+) {
+  const { messageId, userId } = data;
+  console.log("in event messageSeen");
+  console.log(`Message seen by user: ${userId}, message ID: ${messageId}`);
+  
+  // Update message to mark it as seen
+  await this.chatService.markMessageAsSeen(messageId);
+
+  // Notify the sender that the message has been seen
+  const senderSocketId = this.chatService.getUserSocketId(userId);
+  if (senderSocketId) {
+    this.server.to(senderSocketId).emit('messageSeen', { messageId });
+  }
+}
+
     // Join a specific room
     @SubscribeMessage('joinRoom')
     handleJoinRoom(@ConnectedSocket() client: Socket, @MessageBody() room: string) {

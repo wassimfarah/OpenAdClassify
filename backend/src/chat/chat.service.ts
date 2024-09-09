@@ -202,6 +202,14 @@ export class ChatService {
       },
     });
   }
+
+  async markMessageAsSeen(messageId: number): Promise<void> {
+    await this.prisma.message.update({
+      where: { id: messageId },
+      data: { seenAt: new Date(), isRead: true },
+    });
+  }
+  
   
 }
 

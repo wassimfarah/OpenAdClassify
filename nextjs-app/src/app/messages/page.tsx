@@ -24,7 +24,9 @@ interface Message {
   id: number;
   content: string;
   senderId: number;
+  isRead: boolean;
   sender?: { username: string };
+  seenAt?: string;
 }
 
 const MessagesPage = () => {
@@ -52,7 +54,7 @@ const MessagesPage = () => {
             conversation.lastMessage.receiverId === user.sub &&
             !conversation.lastMessage.isRead
           ) {
-            return { ...conversation, isUnread: true }; 
+            return { ...conversation, isUnread: true };
           }
           return conversation;
         });
@@ -64,7 +66,7 @@ const MessagesPage = () => {
     };
 
     fetchConversations();
-  }, [user.sub]);
+  }, [user?.sub]);
 
   useEffect(() => {
     if (selectedConversationId) {
@@ -89,15 +91,19 @@ const MessagesPage = () => {
           // Emit event to join the chat room
           socket.emit('joinRoom', selectedConversation.id.toString());
 
-          // Get the ID of the last message
-          const lastMessageId = selectedConversation.lastMessage?.id;
-
-          if (lastMessageId) {
-            // Mark the last message as read
+          // Mark the last message as read
+          const lastMessage = response.data[response.data.length - 1];
+          console.log("lastMessage: ",lastMessage)
+          if (lastMessage && !lastMessage.isRead && lastMessage.receiverId === user.sub) {
             await apiRequest({
               method: 'PATCH',
-              url: `${process.env.NEXT_PUBLIC_BACKEND_URL_MARK_MESSAGE_READ}/${selectedConversation.id}/${lastMessageId}`,
+              url: `${process.env.NEXT_PUBLIC_BACKEND_URL_MARK_MESSAGE_READ}/${selectedConversation.id}/${lastMessage.id}`,
               useCredentials: true,
+            });
+            console.log("sending message seen to the event listener...")
+            socket.emit('messageSeen', {
+              messageId: lastMessage.id,
+              userId: lastMessage.senderId,
             });
           }
         } catch (error) {
@@ -108,6 +114,24 @@ const MessagesPage = () => {
       fetchMessages();
     }
   }, [selectedConversation]);
+
+  useEffect(() => {
+    const handleMessageSeen = (data: { messageId: number; userId: number }) => {
+      setMessages(prevMessages =>
+        prevMessages.map(message =>
+          message.id === data.messageId
+            ? { ...message, isRead: true, seenAt: new Date().toISOString() }
+            : message
+        )
+      );
+    };
+  
+    socket.on('messageSeen', handleMessageSeen);
+  
+    return () => {
+      socket.off('messageSeen', handleMessageSeen);
+    };
+  }, []);
 
   useEffect(() => {
     const handleNewMessage = (response: any) => {
@@ -170,7 +194,6 @@ const MessagesPage = () => {
       borderRadius: '4px',
       backgroundColor: isSelected ? '#DDD' : isHighlighted ? '#e0f7fa' : 'transparent', // Change background color if highlighted
       fontWeight: isUnread ? 'bold' : 'normal', // Apply bold style if conversation is unread
-     // color: isHighlighted ? 'blue' : 'black', // Change text color if highlighted
     }),
   };
 
@@ -198,14 +221,25 @@ const MessagesPage = () => {
         <h2>Messages</h2>
         {selectedConversation ? (
           <>
-            <ul>
-              {messages?.map(message => (
-                <li key={message.id}>
-                  <strong>{user?.sub === message.senderId ? 'You: ' : `${message.sender?.username}: `}</strong>
-                  {message.content}
-                </li>
-              ))}
-            </ul>
+          <ul>
+            {messages?.map((message, index) => (
+              <li key={message.id}>
+                <strong>
+                  {user?.sub === message.senderId ? 'You: ' : `${message.sender?.username}: `}
+                </strong>
+                {message.content}
+                {index === messages.length - 1 && user?.sub === message.senderId && (
+                  <span style={{ color: 'green', marginLeft: '10px' }}>
+                    {message.isRead
+                      ? message.seenAt
+                        ? `Seen at ${new Date(message.seenAt).toLocaleTimeString()}`
+                        : 'Seen'
+                      : 'Delivered'}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
             <Form>
               <Form.Group className="mb-3 mt-10" controlId="exampleForm.ControlTextarea1">
                 <Form.Label>Type a message</Form.Label>
