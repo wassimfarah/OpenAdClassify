@@ -10,9 +10,16 @@ import NavDropdown from 'react-bootstrap/NavDropdown';
 import Link from 'next/link';
 import { Dropdown } from 'react-bootstrap';
 import { apiRequest } from '../../utils/axiosApiRequest'; // Import the apiRequest function
+import { resetPendingMessageCount } from '@/Redux/pendingMessageSlice';
+import styles from './styles/Navbar.module.css';
+import { useRouter, usePathname } from 'next/navigation';
 
 function NavScrollExample() {
   const { loggedIn, user } = useSelector((state: RootState) => state.auth);
+  const receivedMessagesCount = useSelector((state: RootState) => state.message.pendingMessageCount); // Select receivedMessagesCount from Redux
+  const router = useRouter(); 
+  const pathname = usePathname();
+
   const dispatch = useDispatch();
 
   const handleLogout = async () => {
@@ -32,10 +39,26 @@ function NavScrollExample() {
     }
   };
 
+  const handleMessagesClick = async () => {
+    try {
+      // Reset received messages count on the backend
+      await apiRequest({
+        method: 'PATCH',
+        url: `${process.env.NEXT_PUBLIC_BACKEND_URL_RESET_PENDING_MESSAGES_COUNT}`, 
+        useCredentials: true,
+      });
+
+      // Reset the pending message count in Redux
+      dispatch(resetPendingMessageCount());
+    } catch (error) {
+      console.error('Failed to reset pending message count:', error.message);
+    }
+  };
+
   return (
-    <Navbar expand="lg" className="bg-body-tertiary">
+    <Navbar expand="lg" className={styles.navbarContainer}>
       <Container fluid>
-        <Navbar.Brand href="/" as={Link}>Logo</Navbar.Brand>
+        <Navbar.Brand href="/" as={Link} className={styles.navbarBrand}>OpenAdClassify</Navbar.Brand>
         <Navbar.Toggle aria-controls="navbarScroll" />
         <Navbar.Collapse id="navbarScroll">
           <Nav
@@ -43,9 +66,38 @@ function NavScrollExample() {
             style={{ maxHeight: '100px' }}
             navbarScroll
           >
-            <Nav.Link href="/" as={Link}>Home</Nav.Link>
-            <Nav.Link href="/help" as={Link}>Help</Nav.Link>
-            <Nav.Link href="/messages" as={Link}>Messages</Nav.Link>
+            <Nav.Link 
+              href="/" 
+              as={Link}
+              className={pathname === '/' ? styles.activeLink : ''}
+            >
+              Home
+            </Nav.Link>
+            <Nav.Link href="/" as={Link} className={pathname === '/help' ? styles.activeLink : ''}>
+              Help
+            </Nav.Link>
+            {
+            loggedIn && user ?
+            <Nav.Link 
+            href="/messages" 
+            as={Link} 
+            onClick={handleMessagesClick}
+            style={{
+              color: receivedMessagesCount > 0 ? 'red' : 'inherit',
+              fontWeight: receivedMessagesCount > 0 ? 'bold' : 'normal',
+            }}
+            className={`${styles.navbarLink} ${pathname === '/messages' ? styles.activeLink : ''}`}
+
+          >
+            Messages
+            {receivedMessagesCount > 0 && (
+              <span className={styles.messageCount}>({receivedMessagesCount})</span>
+            )}
+          </Nav.Link>
+          : null
+          }
+
+
           </Nav>
 
           {/* Centered Create Ad Dropdown */}
@@ -56,10 +108,9 @@ function NavScrollExample() {
               </Dropdown.Toggle>
 
               <Dropdown.Menu>
-                <Dropdown.Item href="/createAd/sell">Sell</Dropdown.Item>
-                <Dropdown.Item href="/createAd/seek">Seek</Dropdown.Item>
+                <Dropdown.Item href="/createAd/sell"> 🛒 Sell</Dropdown.Item>
                 <Dropdown.Divider />
-                <Dropdown.Item href="/createAd/donate">Donate</Dropdown.Item>
+                <Dropdown.Item href="/createAd/donate">❤️ Donate</Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
           </div>
@@ -67,11 +118,17 @@ function NavScrollExample() {
           {/* Preferences */}
           <Nav className="d-flex">
             {loggedIn && user ? (
-              <NavDropdown align="end" title={`Welcome, ${user.username}`} id="user-dropdown">
-                <NavDropdown.Item onClick={handleLogout}>
-                  Logout
-                </NavDropdown.Item>
-              </NavDropdown>
+              <>
+                <NavDropdown align="end" title={`Welcome, ${user.username}`} id="user-dropdown">
+                  <NavDropdown.Item as={Link} href="/ads-history">
+                  📜 Ads History
+                  </NavDropdown.Item>
+                  <Dropdown.Divider />
+                  <NavDropdown.Item onClick={handleLogout}>
+                  🔓 Logout
+                  </NavDropdown.Item>
+                </NavDropdown>
+              </>
             ) : (
               <>
                 <Nav.Link as={Link} href="/register">
@@ -85,15 +142,11 @@ function NavScrollExample() {
             <NavDropdown align="end" title="⚙️" id="preferences-dropdown">
               <NavDropdown.Item>
                 {/* Language Switcher */}
-                  <Link href="/" locale="en">Language</Link>
+                🌐 Language
               </NavDropdown.Item>
               <NavDropdown.Divider />
               <NavDropdown.Item>
-                {/* Theme Switcher */}
-                <div>
-                  <input type="checkbox" id="theme-switch" />
-                  <label htmlFor="theme-switch">Toggle Theme</label>
-                </div>
+               🌙 Theme
               </NavDropdown.Item>
             </NavDropdown>
           </Nav>

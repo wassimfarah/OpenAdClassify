@@ -66,14 +66,13 @@ export class AdService {
     try {
       const {
         title, description, price, minimumPrice, type,
-        acceptOffer, acceptMessages, acceptExchange, location,
+         acceptMessages, location,
         adStatus, categoryId, subcategoryId, createdById, mediaIds,
       } = createAdDto;
-
       const ad = await this.prisma.ad.create({
         data: {
           title, description, price, minimumPrice, type,
-          acceptOffer, acceptMessages, acceptExchange, location, adStatus,
+           acceptMessages, location, adStatus,
           category: { connect: { id: categoryId } },
           subcategory: { connect: { id: subcategoryId } },
           createdBy: { connect: { id: createdById } },
@@ -122,15 +121,12 @@ export class AdService {
         );
       }
 
+      // Convert ad times
       const adWithConvertedTimes = this.convertAdTimes(ad);
-      const mediaWithBase64Promises = ad.media.map(async mediaItem => ({
-        b64: await this.getBase64ImageFromMedia(mediaItem),
-      }));
-
-      const mediaWithBase64 = await Promise.all(mediaWithBase64Promises);
-      adWithConvertedTimes.mediaData = mediaWithBase64;
-
-      return createSuccessResponse({ ad: adWithConvertedTimes }, 'Ad fetched successfully');
+      // Process media and include base64 representation
+      const adWithMedia = await this.processAdMedia(adWithConvertedTimes);
+  
+      return createSuccessResponse({ ad: adWithMedia }, 'Ad fetched successfully');
     } catch (error) {
       throw new HttpException(
         createErrorResponse('Failed to fetch the ad', error.message),
@@ -169,6 +165,34 @@ export class AdService {
 
   async remove(id: string) {
     try {
+      
+      // Fetch media associated with the ad
+      const ad = await this.prisma.ad.findUnique({
+        where: { id },
+        include: { media: true },
+      });
+      console.log("ad found: ",ad)
+      if (!ad) {
+        throw new HttpException(
+          createErrorResponse('Ad not found', 'The requested ad does not exist'),
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      // Delete all media associated with the ad
+      await Promise.all(
+        ad.media.map(async (mediaItem) => {
+          try {
+            console.log("mediaItem: ",mediaItem)
+            console.log("deleting media item by id: ",mediaItem.id)
+            await this.mediaService.remove(mediaItem.id);
+          } catch (error) {
+            console.error(`Failed to delete media item: ${mediaItem.id}`, error);
+          }
+        }),
+      );
+
+      // Delete the ad
       const deletedAd = await this.prisma.ad.delete({
         where: { id },
       });
@@ -181,6 +205,7 @@ export class AdService {
       }
 
       return createSuccessResponse(deletedAd, 'Ad deleted successfully');
+    
     } catch (error) {
       throw new HttpException(
         createErrorResponse('Failed to delete the ad', error.message),

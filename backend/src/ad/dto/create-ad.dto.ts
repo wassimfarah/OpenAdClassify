@@ -18,13 +18,7 @@ export class CreateAdDto {
   type: AdType;
 
   @IsBoolean()
-  acceptOffer: boolean;
-
-  @IsBoolean()
   acceptMessages: boolean;
-
-  @IsBoolean()
-  acceptExchange: boolean;
 
   @IsString()
   location: string;

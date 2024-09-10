@@ -47,6 +47,9 @@ export class UsersService {
   async findUserById(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      include: {
+        ads: true, 
+      },
     });
 
     // Convert timestamps to the desired timezone
@@ -58,4 +61,20 @@ export class UsersService {
 
     return userWithConvertedTimes;
   }
+
+  async incrementPendingMessageCountByOne(userId: number): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { pendingMessageCount: { increment: 1 } }, // Increment the count by 1
+    });
+  }
+
+  async resetPendingMessageCount(userId: number): Promise<void> {
+    console.log("count reset!")
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { pendingMessageCount: 0 }, // Reset the count to zero
+    });
+  }
+  
 }

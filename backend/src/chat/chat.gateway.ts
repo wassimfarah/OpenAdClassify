@@ -32,6 +32,54 @@ export class ChatGateway
     console.log('Client disconnected:', client.id);
   }
 
+  @SubscribeMessage('userConnected')
+  handleUserConnected(
+    @MessageBody() data: { userId: number },
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log(`User connected: ${data.userId}, socket: ${client.id}`);
+    this.chatService.addUserSocket(data.userId, client.id);
+    console.log('User socket stored');
+  }
+
+  @SubscribeMessage('notifyReceiver')
+  notifyReceiver(
+    @MessageBody() data: { receiverId: number; conversationId: number },
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log(`Notifying receiver: ${data.receiverId}`);
+    
+    const receiverSocketId = this.chatService.getUserSocketId(data.receiverId);
+    if (receiverSocketId) {
+      this.server.to(receiverSocketId).emit('notifyReceiver', {
+        message: 'You have a new message',
+        conversationId: data.conversationId,
+      });
+      console.log(`Notification sent to socket: ${receiverSocketId}`);
+    } else {
+      console.log('Receiver not connected, unable to send notification.');
+    }
+  }
+
+  @SubscribeMessage('messageSeen')
+async handleMessageSeen(
+  @MessageBody() data: { messageId: number; userId: number },
+  @ConnectedSocket() client: Socket,
+) {
+  const { messageId, userId } = data;
+  console.log("in event messageSeen");
+  console.log(`Message seen by user: ${userId}, message ID: ${messageId}`);
+  
+  // Update message to mark it as seen
+  await this.chatService.markMessageAsSeen(messageId);
+
+  // Notify the sender that the message has been seen
+  const senderSocketId = this.chatService.getUserSocketId(userId);
+  if (senderSocketId) {
+    this.server.to(senderSocketId).emit('messageSeen', { messageId });
+  }
+}
+
     // Join a specific room
     @SubscribeMessage('joinRoom')
     handleJoinRoom(@ConnectedSocket() client: Socket, @MessageBody() room: string) {

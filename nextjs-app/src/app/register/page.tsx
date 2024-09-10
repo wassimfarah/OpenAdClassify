@@ -4,12 +4,14 @@ import { useState } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
 import styles from './styles/Register.module.css';
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 
 const Register = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -29,6 +31,11 @@ const Register = () => {
         setError(response.data.message || 'Registration failed');
       } else {
         setSuccess('Registration successful!');
+        // Clear the input fields
+        setUsername('');
+        setEmail('');
+        setPhoneNumber('');
+        setPassword('');
       }
     } catch (error) {
       if (error.response) {
@@ -71,20 +78,30 @@ const Register = () => {
         />
 
         <label htmlFor="password">Password</label>
-        <input
-          type="password"
-          id="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <div className={styles.passwordContainer}>
+          <input
+            type={passwordVisible ? 'text' : 'password'}
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <span 
+            className={styles.eyeIcon} 
+            onClick={() => setPasswordVisible(!passwordVisible)}
+          >
+            {passwordVisible ? <AiFillEyeInvisible /> : <AiFillEye />}
+          </span>
+        </div>
 
         <button type="submit" className={styles.button}>Register</button>
 
         {success && <p className={styles.success}>{success}</p>}
         {error && <p className={styles.error}>{error}</p>}
       </form>
-      <p className="mt-10">Already have an account? <Link href="/login">Login here</Link></p>
+      <p className="mt-10 text-center text-sm text-gray-600">
+        Already have an account? <Link href="/login" className="text-indigo-600 hover:text-indigo-500">Login here</Link>
+      </p>   
     </div>
   );
 };
