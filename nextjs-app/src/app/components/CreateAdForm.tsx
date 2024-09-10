@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '@/utils/axiosApiRequest';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { toast } from 'react-toastify'; 
+import { Button } from 'react-bootstrap';
 
 interface CreateAdFormProps {
   adId?: string;
@@ -48,14 +50,13 @@ const CreateAdForm = ({ adId, initialData }: CreateAdFormProps) => {
         console.log("received Data: ",initialData)
       // Extract and set only the necessary fields from initialData
       const { title, description, price, minimumPrice, acceptMessages, location, categoryId, subcategoryId, mediaData } = initialData;
-
       setFormData({
         title: title || '',
         description: description || '',
         price: price || 0,
         minimumPrice: minimumPrice || 0,
         type: 'SELL',
-        acceptMessages: acceptMessages || true,
+        acceptMessages: acceptMessages !== undefined ? acceptMessages : true,
         location: location || '',
         categoryId: categoryId || '',
         subcategoryId: subcategoryId || '',
@@ -180,6 +181,9 @@ const CreateAdForm = ({ adId, initialData }: CreateAdFormProps) => {
           useCredentials: true,
         });
         console.log('Ad updated successfully');
+        resetForm();
+        toast.success('Ad updated successfully'); 
+
       
          // Compare initialExistingImages with current existingImages to determine if images have changed
       const imagesHaveChanged =
@@ -252,6 +256,9 @@ const CreateAdForm = ({ adId, initialData }: CreateAdFormProps) => {
         const mediaIds = await uploadImages(adId);
 
         console.log('Ad created and media uploaded successfully:', mediaIds);
+        resetForm();
+        toast.success('Ad created and media uploaded successfully'); 
+
       }
     } catch (error) {
       console.error('Error creating or updating ad:', error);
@@ -262,6 +269,26 @@ const CreateAdForm = ({ adId, initialData }: CreateAdFormProps) => {
     return <div>Loading...</div>;
   }
 
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      price: 0,
+      minimumPrice: 0,
+      type: 'SELL',
+      acceptMessages: true,
+      location: '',
+      categoryId: '',
+      subcategoryId: '',
+      adStatus: 'ACTIVE',
+    });
+    setCategories([]);
+    setSubcategories([]);
+    setSelectedImages([]);
+    setExistingImages([]);
+    setInitialExistingImages([]);
+  };
+  
   return (
     <form onSubmit={handleSubmit} className={`container mt-4`}>
       <div className="mb-3">
@@ -391,8 +418,13 @@ const CreateAdForm = ({ adId, initialData }: CreateAdFormProps) => {
           ))}
         </div>
       </div>
-
-      <button type="submit" className="btn btn-primary">Submit</button>
+        <div className='text-center p-10'>
+        <Button type="submit" className="btn btn-primary">Submit</Button>
+          {/* Reset Button */}
+          <Button type="button" onClick={resetForm} className="ml-14 btn btn-secondary">
+            Reset
+          </Button>
+        </div>
     </form>
   );
 };

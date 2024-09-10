@@ -45,9 +45,6 @@ const AdCard: React.FC<AdCardProps> = ({ ad }) => {
       <Card.Body>
         <Card.Title>{ad.title}</Card.Title>
         <Card.Text>
-          {ad.description}
-        </Card.Text>
-        <Card.Text>
           <strong>Price:</strong> ${ad.price}
         </Card.Text>
         <Card.Text>

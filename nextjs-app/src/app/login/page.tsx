@@ -4,10 +4,12 @@ import { useState } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
 import styles from './styles/Login.module.css';
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'; 
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
 
@@ -50,7 +52,6 @@ const Login = () => {
       setSuccess(false);
     }
   };
-  
 
   return (
     <div className={styles.container}>
@@ -66,13 +67,21 @@ const Login = () => {
         />
 
         <label htmlFor="password">Password</label>
-        <input
-          type="password"
-          id="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <div className={styles.passwordContainer}>
+          <input
+            type={passwordVisible ? 'text' : 'password'}
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <span 
+            className={styles.eyeIcon} 
+            onClick={() => setPasswordVisible(!passwordVisible)}
+          >
+            {passwordVisible ? <AiFillEyeInvisible /> : <AiFillEye />}
+          </span>
+        </div>
 
         <button type="submit" className={styles.button}>Login</button>
 

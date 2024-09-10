@@ -11,6 +11,10 @@ import { useState } from 'react';
 import RouteAuthGuard from './components/RouteAccessControl ';
 import SocketManager from './components/SocketManager';
 import PendingMessageCountFetcher from './components/PendingMessageCountFetcher';
+import { AppProgressBar as ProgressBar } from 'next-nprogress-bar';
+import 'react-toastify/dist/ReactToastify.css'; 
+import { ToastContainer } from 'react-toastify';
+
 
 export default function Layout({ children }: { children: ReactNode }) {
   const [authChecked, setAuthChecked] = useState(false);
@@ -30,8 +34,16 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <CustomNavbar />
                 {children}
               </RouteAuthGuard>
-              <SocketManager /> 
-              <PendingMessageCountFetcher/>
+              <SocketManager />
+              <PendingMessageCountFetcher />
+              <ProgressBar
+                height="2px" 
+                color="red" 
+                options={{ showSpinner: false }} 
+                shallowRouting // Enable shallow routing support
+              />
+              <ToastContainer /> 
+
             </>
           ) : (
             <div>Loading...</div> // Show Spinner or loading state while auth is checked

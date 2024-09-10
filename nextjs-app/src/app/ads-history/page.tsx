@@ -5,8 +5,8 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../Redux/store';
 import { apiRequest } from '../../utils/axiosApiRequest';
 import { useRouter } from 'next/navigation';
-import { Card, Button, Container, Row, Col, Spinner, Alert, ButtonGroup } from 'react-bootstrap';
-import { PencilSquare, Trash, Eye } from 'react-bootstrap-icons'; 
+import { Card, Button, Container, Row, Col, Spinner, Alert, ButtonGroup, Modal } from 'react-bootstrap';
+import { PencilSquare, Trash, Eye } from 'react-bootstrap-icons';
 
 interface Ad {
   id: string;
@@ -23,10 +23,10 @@ const AdsHistory = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showConfirmDelete, setShowConfirmDelete] = useState<boolean>(false);
   const router = useRouter();
 
   useEffect(() => {
-
     const fetchAds = async () => {
       try {
         setLoading(true);
@@ -53,7 +53,6 @@ const AdsHistory = () => {
 
   const handleAdSelect = (ad: Ad) => {
     setSelectedAd(ad);
-    console.log("selected Ad: ", selectedAd)
     setSuccess(null); // Clear any previous success message
   };
 
@@ -90,6 +89,8 @@ const AdsHistory = () => {
       setSuccess('Ad deleted successfully.');
     } catch (error) {
       setError('Failed to delete ad: ' + error.message);
+    } finally {
+      setShowConfirmDelete(false); // Close the modal after deletion
     }
   };
 
@@ -106,7 +107,7 @@ const AdsHistory = () => {
           <Button variant="warning" onClick={handleEdit}>
             <PencilSquare className="me-2" /> Edit
           </Button>
-          <Button variant="danger" onClick={handleDelete}>
+          <Button variant="danger" onClick={() => setShowConfirmDelete(true)}>
             <Trash className="me-2" /> Delete
           </Button>
         </ButtonGroup>
@@ -140,6 +141,24 @@ const AdsHistory = () => {
           </Row>
         </>
       )}
+
+      {/* Confirmation Modal */}
+      <Modal show={showConfirmDelete} onHide={() => setShowConfirmDelete(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete the ad titled "{selectedAd?.title}"?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowConfirmDelete(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

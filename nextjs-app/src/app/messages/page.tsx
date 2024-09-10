@@ -27,6 +27,7 @@ interface Message {
   isRead: boolean;
   sender?: { username: string };
   seenAt?: string;
+  createdAt: string;
 }
 
 const MessagesPage = () => {
@@ -184,23 +185,78 @@ const MessagesPage = () => {
   };
 
   const styles = {
-    container: { display: 'flex', height: '100vh' },
-    conversationList: { width: '30%', borderRight: '1px solid #ccc', padding: '10px' },
-    messagePanel: { width: '70%', padding: '10px' },
+    container: { display: 'flex', height: '100vh', fontFamily: 'Arial, sans-serif' },
+    conversationList: { 
+      width: '30%', 
+      borderRight: '1px solid #ddd', 
+      padding: '10px', 
+      backgroundColor: '#f9f9f9' 
+    },
+    messagePanel: { 
+      width: '70%', 
+      padding: '10px', 
+      backgroundColor: '#ffffff' 
+    },
     conversationItem: (isSelected: boolean, isUnread: boolean, isHighlighted: boolean) => ({
       cursor: 'pointer',
       marginBottom: '10px',
-      padding: '5px',
-      borderRadius: '4px',
-      backgroundColor: isSelected ? '#DDD' : isHighlighted ? '#e0f7fa' : 'transparent', // Change background color if highlighted
-      fontWeight: isUnread ? 'bold' : 'normal', // Apply bold style if conversation is unread
+      padding: '10px',
+      borderRadius: '8px',
+      backgroundColor: isSelected 
+        ? '#e0e0e0' 
+        : isHighlighted 
+        ? '#e0f7fa' 
+        : 'transparent', 
+      fontWeight: isUnread ? 'bold' : 'normal',
+      transition: 'background-color 0.3s ease',
     }),
+    messageListContainer: {
+      maxHeight: '70vh', 
+      overflowY: 'auto',
+      padding: '10px',
+    },
+    messageList: {
+      listStyleType: 'none',
+      padding: '0',
+      margin: '0',
+    },
+    messageItem: {
+      padding: '8px',
+      borderRadius: '5px',
+      marginBottom: '8px',
+      backgroundColor: '#f0f0f0',
+      maxWidth: '80%',
+      wordWrap: 'break-word',
+    },
+    messageSender: (isCurrentUser: boolean) => ({
+      fontWeight: 'bold',
+      color: isCurrentUser ? '#333' : '#007bff', // Different color for current user's messages
+    }),
+    messageStatus: {
+      color: 'green',
+      marginLeft: '10px',
+      fontSize: '0.75em',
+    },
+    messageDate: {
+      fontSize: '0.75em',
+      color: '#888',
+      marginTop: '4px',
+    },
+    inputContainer: {
+      marginTop: '20px',
+    },
+    formLabel: {
+      marginBottom: '10px',
+    },
+    sendMsgBtn: {
+      margin: '20px'
+    }
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.conversationList}>
-        <h2>Conversations</h2>
+        <h2 className='font-bold text-center mt-8 mb-4'>Conversations</h2>
         <ul>
           {conversations?.map(conversation => (
             <li
@@ -218,31 +274,37 @@ const MessagesPage = () => {
         </ul>
       </div>
       <div style={styles.messagePanel}>
-        <h2>Messages</h2>
+        <h2 className='font-bold text-center mt-8 mb-6'>Messages</h2>
         {selectedConversation ? (
           <>
-          <ul>
-            {messages?.map((message, index) => (
-              <li key={message.id}>
-                <strong>
-                  {user?.sub === message.senderId ? 'You: ' : `${message.sender?.username}: `}
-                </strong>
-                {message.content}
-                {index === messages.length - 1 && user?.sub === message.senderId && (
-                  <span style={{ color: 'green', marginLeft: '10px' }}>
-                    {message.isRead
-                      ? message.seenAt
-                        ? `Seen at ${new Date(message.seenAt).toLocaleTimeString()}`
-                        : 'Seen'
-                      : 'Delivered'}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-            <Form>
-              <Form.Group className="mb-3 mt-10" controlId="exampleForm.ControlTextarea1">
-                <Form.Label>Type a message</Form.Label>
+            <div style={styles.messageListContainer}>
+
+            <ul style={styles.messageList}>
+              {messages?.map((message, index) => (
+                <li key={message.id} style={styles.messageItem}>
+                  <div style={styles.messageSender(user?.sub === message.senderId)}>
+                    {user?.sub === message.senderId ? 'You: ' : `${message.sender?.username}: `}
+                  </div>
+                  {message.content}
+                  {index === messages.length - 1 && user?.sub === message.senderId && (
+                    <span style={styles.messageStatus}>
+                      {message.isRead
+                        ? message.seenAt
+                          ? `Seen at ${new Date(message.seenAt).toLocaleTimeString()}`
+                          : 'Seen'
+                        : 'Delivered'}
+                    </span>
+                  )}
+                  <div style={styles.messageDate}>
+                    {new Date(message.createdAt).toLocaleString()}
+                  </div>
+                </li>
+              ))}
+            </ul>
+            </div>
+            <Form style={styles.inputContainer}>
+              <Form.Group>
+                <Form.Label style={styles.formLabel}>Type your message:</Form.Label>
                 <Form.Control
                   as="textarea"
                   rows={3}
@@ -250,7 +312,7 @@ const MessagesPage = () => {
                   onChange={(e) => setNewMessage(e.target.value)}
                 />
               </Form.Group>
-              <Button onClick={handleSendMessage}>Send Message</Button>
+              <Button style={styles.sendMsgBtn} onClick={handleSendMessage}>Send Message</Button>
             </Form>
           </>
         ) : (

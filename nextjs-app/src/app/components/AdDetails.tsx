@@ -85,8 +85,13 @@ const AdDetails: React.FC<{ adId: string }> = ({ adId }) => {
       dispatch(setSelectedConversationId(conversation.id));
       router.push('/messages');
     } catch (error) {
-      console.error('Error starting conversation:', error);
-      setError('Failed to start a conversation. Please try again.');
+      if (!user){ // user not logged in.
+        router.push('/login');
+      } else {
+        console.error('Error starting conversation:', error);
+        setError('Failed to start a conversation. Please try again.');
+      }
+
     }
   };
 
