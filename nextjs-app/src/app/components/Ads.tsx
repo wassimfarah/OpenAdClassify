@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '@/utils/axiosApiRequest';
 import AdCard from './AdCard';
+import { Spinner } from 'react-bootstrap'; 
 
 // Define TypeScript interfaces for the ad
 interface Ad {
@@ -40,8 +41,18 @@ const Ads: React.FC = () => {
     fetchAds();
   }, []);
 
-  if (loading) return <div>Loading Ads...</div>;
-  if (error) return <div>{error}</div>;
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
+        <Spinner animation="border" role="status">
+        </Spinner>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
 
   return (
     <div className="container">

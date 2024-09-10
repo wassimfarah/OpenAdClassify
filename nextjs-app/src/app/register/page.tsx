@@ -99,7 +99,9 @@ const Register = () => {
         {success && <p className={styles.success}>{success}</p>}
         {error && <p className={styles.error}>{error}</p>}
       </form>
-      <p className="mt-10">Already have an account? <Link href="/login">Login here</Link></p>
+      <p className="mt-10 text-center text-sm text-gray-600">
+        Already have an account? <Link href="/login" className="text-indigo-600 hover:text-indigo-500">Login here</Link>
+      </p>   
     </div>
   );
 };

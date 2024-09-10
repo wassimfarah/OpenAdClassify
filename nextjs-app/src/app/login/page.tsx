@@ -87,7 +87,9 @@ const Login = () => {
 
         {message && <p className={success ? styles.success : styles.error}>{message}</p>}
       </form>
-      <p className="mt-10">Don't have an account? <Link href="/register">Register here</Link></p>
+      <p className="mt-10 text-center text-sm text-gray-600">
+        Don't have an account? <Link href="/register" className="text-indigo-600 hover:text-indigo-500">Register here</Link>
+      </p>
     </div>
   );
 };

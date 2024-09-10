@@ -73,7 +73,7 @@ function NavScrollExample() {
             >
               Home
             </Nav.Link>
-            <Nav.Link href="/help" as={Link} className={pathname === '/help' ? styles.activeLink : ''}>
+            <Nav.Link href="/" as={Link} className={pathname === '/help' ? styles.activeLink : ''}>
               Help
             </Nav.Link>
             {
