@@ -1,0 +1,50 @@
+.navbarContainer {
+  background-color: #f8f9fa;
+}
+
+.navbarBrand {
+  font-weight: bold;
+}
+
+.createAdDropdown {
+  border: none;
+  display: flex;
+  align-items: center;
+}
+
+.createAdButton:hover {
+  background-color: #0056b3;
+  color: white;
+}
+
+.dropdownIcon {
+  margin-left: 8px;
+}
+
+.dropdownDividerSpacing {
+  padding-top: 12px;
+}
+
+.donateItemSpacing {
+  margin-top: 16px;
+}
+
+.donateItemSpacing hr {
+  margin: 12px 0;
+}
+
+.navbar-link {
+  display: flex;
+  align-items: center;
+  height: 40px; 
+}
+
+.messageCount {
+  margin-left: 5px;
+  font-size: 0.875rem; 
+  color: red;
+}
+
+.activeLink {
+  text-decoration: underline;
+}

@@ -7,14 +7,119 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum AdStatus {
+  ACTIVE
+  INACTIVE
+  SOLD
+  EXPIRED
+}
+
+enum AdType {
+  SELLING
+  SEEKING
+  RENT
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
+
 model User {
-  id             Int      @id @default(autoincrement())
-  username       String   @unique
-  email          String   @unique
-  phoneNumber    String   @unique
+id             Int      @id @default(autoincrement())
+  username       String    @unique
+  email          String    @unique
+  phoneNumber    String    @unique
   password       String
-  profilePicture String?
-  isAdmin        Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  profilePicture String?  
+  role           UserRole  @default(USER)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  ads            Ad[]     
+  conversations       Conversation[]  @relation("UserConversations") 
+  sentMessages        Message[]       @relation("SenderMessages") 
+  receivedMessages    Message[]       @relation("ReceiverMessages") 
+  pendingMessageCount  Int           @default(0)
+
+}
+
+model Ad {
+  id              String     @id @default(uuid())
+  title           String
+  description     String
+  price           Float
+  minimumPrice    Float
+  type            AdType
+  acceptMessages  Boolean
+  location        String
+  adStatus        AdStatus
+  category        Category  @relation(fields: [categoryId], references: [id])
+  categoryId      String
+  subcategory     Subcategory @relation(fields: [subcategoryId], references: [id])
+  subcategoryId   String
+  createdBy       User      @relation(fields: [createdById], references: [id])
+  createdById     Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  media           Media[]
+  numberOfImpressions Int @default(0)
+  conversations     Conversation[]
+
+}
+
+model Category {
+  id              String   @id @default(uuid())
+  name            String   @unique
+  ads             Ad[]
+  subcategories   Subcategory[]
+}
+
+model Subcategory {
+  id              String   @id @default(uuid())
+  name            String
+  ads             Ad[]
+  category        Category @relation(fields: [categoryId], references: [id])
+  categoryId      String
+}
+
+model Media {
+  id        String     @id @default(uuid())
+  url       String    
+  type      MediaType
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  ad        Ad?        @relation(fields: [adId], references: [id])
+  adId      String?
+}
+
+model Conversation {
+  id            Int         @id @default(autoincrement())
+  participants  User[]      @relation("UserConversations")
+  messages      Message[]
+  ad            Ad?         @relation(fields: [adId], references: [id])
+  adId          String?    
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  senderId       Int
+  sender         User         @relation("SenderMessages", fields: [senderId], references: [id])
+  receiverId     Int
+  receiver       User         @relation("ReceiverMessages", fields: [receiverId], references: [id])
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  content        String
+  isRead         Boolean      @default(false) 
+  createdAt      DateTime     @default(now())
+  seenAt         DateTime?    // Add this line
+
 }
